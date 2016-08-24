@@ -12,6 +12,7 @@ import os
 import time
 import logging
 import random
+import locale
 
 default_settings = {"PAYDAY_TIME": 300, "PAYDAY_CREDITS": 120,
                     "SLOT_MIN": 5, "SLOT_MAX": 100, "SLOT_TIME": 0,
@@ -314,7 +315,7 @@ class Economy:
             credits = settings.get("REGISTER_CREDITS", 0)
         try:
             account = self.bank.create_account(author, initial_balance=credits)
-            await self.bot.say("{} Account opened. Current balance: {}"
+            await self.bot.say("{} Account opened. Current balance: {:,}"
                                "".format(author.mention, account.balance))
         except AccountAlreadyExists:
             await self.bot.say("{} You already have an account at the"
@@ -328,7 +329,7 @@ class Economy:
         if not user:
             user = ctx.message.author
             try:
-                await self.bot.say("{} Your balance is: {}".format(
+                await self.bot.say("{} Your balance is: {:,}".format(
                     user.mention, self.bank.get_balance(user)))
             except NoAccount:
                 await self.bot.say("{} You don't have an account at the"
@@ -337,7 +338,7 @@ class Economy:
                                                           ctx.prefix))
         else:
             try:
-                await self.bot.say("{}'s balance is {}".format(
+                await self.bot.say("{}'s balance is {:,}".format(
                     user.name, self.bank.get_balance(user)))
             except NoAccount:
                 await self.bot.say("That user has no bank account.")
@@ -348,7 +349,7 @@ class Economy:
         author = ctx.message.author
         try:
             self.bank.transfer_credits(author, user, sum)
-            logger.info("{}({}) transferred {} credits to {}({})".format(
+            logger.info("{}({}) transferred {:,} credits to {}({})".format(
                 author.name, author.id, sum, user.name, user.id))
             await self.bot.say("{} credits have been transferred to {}'s"
                                " account.".format(sum, user.name))
@@ -378,20 +379,20 @@ class Economy:
                 self.bank.deposit_credits(user, credits.sum)
                 logger.info("{}({}) added {} credits to {} ({})".format(
                     author.name, author.id, credits.sum, user.name, user.id))
-                await self.bot.say("{} credits have been added to {}"
+                await self.bot.say("{:,} credits have been added to {}"
                                    "".format(credits.sum, user.name))
             elif credits.operation == "withdraw":
                 self.bank.withdraw_credits(user, credits.sum)
                 logger.info("{}({}) removed {} credits to {} ({})".format(
                     author.name, author.id, credits.sum, user.name, user.id))
-                await self.bot.say("{} credits have been withdrawn from {}"
+                await self.bot.say("{:,} credits have been withdrawn from {}"
                                    "".format(credits.sum, user.name))
             elif credits.operation == "set":
                 self.bank.set_credits(user, credits.sum)
                 logger.info("{}({}) set {} credits to {} ({})"
                             "".format(author.name, author.id, credits.sum,
                                       user.name, user.id))
-                await self.bot.say("{}'s credits have been set to {}".format(
+                await self.bot.say("{}'s credits have been set to {:,}".format(
                     user.name, credits.sum))
         except InsufficientBalance:
             await self.bot.say("User doesn't have enough credits.")
@@ -427,7 +428,7 @@ class Economy:
                     self.payday_register[server.id][
                         id] = int(time.perf_counter())
                     await self.bot.say(
-                        "{} Here, take some credits. Enjoy! (+{}"
+                        "{} Here, take some credits. Enjoy! (+{:,}"
                         " credits!)".format(
                             author.mention,
                             str(self.settings[server.id]["PAYDAY_CREDITS"])))
@@ -442,7 +443,7 @@ class Economy:
                 self.bank.deposit_credits(author, self.settings[
                                           server.id]["PAYDAY_CREDITS"])
                 await self.bot.say(
-                    "{} Here, take some credits. Enjoy! (+{} credits!)".format(
+                    "{} Here, take some credits. Enjoy! (+{:,} credits!)".format(
                         author.mention,
                         str(self.settings[server.id]["PAYDAY_CREDITS"])))
         else:
@@ -473,8 +474,28 @@ class Economy:
         if len(bank_sorted) < top:
             top = len(bank_sorted)
         topten = bank_sorted[:top]
+        
+        maxnamew = 0
+        maxcredw = 0
+        place = 0
+        for acc in topten:
+            place += 1
+            namew = len(acc.name)
+            if namew > maxnamew:
+                maxnamew = namew
+            servw = len(acc.server.name)
+            credw = len('{:,}'.format(acc.balance))
+            if credw > maxcredw:
+                maxcredw = credw
+            if acc.balance == 0:
+                top = place
+                break
+        colwidth_place = len(str(top))+2
+        colwidth_name = maxnamew+2
+        colwidth_cred = maxcredw+2
+        
         highscore = ""
-        place = 1
+        place = 0
         for acc in topten:
             highscore += str(place).ljust(len(str(top)) + 1)
             highscore += (str(acc.member.display_name) + " ").ljust(23 - len(str(acc.balance)))
@@ -503,8 +524,32 @@ class Economy:
         if len(unique_accounts) < top:
             top = len(unique_accounts)
         topten = unique_accounts[:top]
+        
+        maxnamew = 0
+        maxservw = 0
+        maxcredw = 0
+        place = 0
+        for acc in topten:
+            place += 1
+            namew = len(acc.name)
+            if namew > maxnamew:
+                maxnamew = namew
+            servw = len(acc.server.name)
+            if servw > maxservw:
+                maxservw = servw
+            credw = len('{:,}'.format(acc.balance))
+            if credw > maxcredw:
+                maxcredw = credw
+            if acc.balance == 0:
+                top = place
+                break
+        colwidth_place = len(str(top))+2
+        colwidth_name = maxnamew+2
+        colwidth_serv = maxservw+4
+        colwidth_cred = maxcredw+2
+        
         highscore = ""
-        place = 1
+        place = 0
         for acc in topten:
             highscore += str(place).ljust(len(str(top)) + 1)
             highscore += ("{} |{}| ".format(acc.member, acc.server)
@@ -533,6 +578,7 @@ class Economy:
         """Play the slot machine"""
         author = ctx.message.author
         server = author.server
+<<<<<<< HEAD
         settings = self.settings[server.id]
         valid_bid = settings["SLOT_MIN"] <= bid and bid <= settings["SLOT_MAX"]
         slot_time = settings["SLOT_TIME"]
@@ -574,12 +620,12 @@ class Economy:
                 (reels[0][1], reels[1][1], reels[2][1]),
                 (reels[0][2], reels[1][2], reels[2][2]))
 
-        slot = "~~\n~~" # Mobile friendly
+        slot = "" # Mobile friendly
         for i, row in enumerate(rows): # Let's build the slot to show
-            sign = "  "
+            sign = ""
             if i == 1:
-                sign = ">"
-            slot += "{}{} {} {}\n".format(sign, *[c.value for c in row])
+                sign = " <<<"
+            slot += "{} {} {}{}\n".format(*[c.value for c in row], sign)
 
         payout = PAYOUTS.get(rows[1])
         if not payout:
@@ -602,7 +648,7 @@ class Economy:
             pay = payout["payout"](bid)
             now = then - bid + pay
             self.bank.set_credits(author, now)
-            await self.bot.say("{}\n{} {}\n\nYour bid: {}\n{} → {}!"
+            await self.bot.say("{}\n{} {}\n\nYour bid: {:,}\n{:,} → {:,}!"
                                "".format(slot, author.mention,
                                          payout["phrase"], bid, then, now))
         else:
@@ -631,7 +677,7 @@ class Economy:
         """Minimum slot machine bid"""
         server = ctx.message.server
         self.settings[server.id]["SLOT_MIN"] = bid
-        await self.bot.say("Minimum bid is now {} credits.".format(bid))
+        await self.bot.say("Minimum bid is now {:,} credits.".format(bid))
         dataIO.save_json(self.file_path, self.settings)
 
     @economyset.command(pass_context=True)
@@ -639,7 +685,7 @@ class Economy:
         """Maximum slot machine bid"""
         server = ctx.message.server
         self.settings[server.id]["SLOT_MAX"] = bid
-        await self.bot.say("Maximum bid is now {} credits.".format(bid))
+        await self.bot.say("Maximum bid is now {:,} credits.".format(bid))
         dataIO.save_json(self.file_path, self.settings)
 
     @economyset.command(pass_context=True)
@@ -647,7 +693,7 @@ class Economy:
         """Seconds between each slots use"""
         server = ctx.message.server
         self.settings[server.id]["SLOT_TIME"] = seconds
-        await self.bot.say("Cooldown is now {} seconds.".format(seconds))
+        await self.bot.say("Cooldown is now {:,} seconds.".format(seconds))
         dataIO.save_json(self.file_path, self.settings)
 
     @economyset.command(pass_context=True)
@@ -655,7 +701,7 @@ class Economy:
         """Seconds between each payday"""
         server = ctx.message.server
         self.settings[server.id]["PAYDAY_TIME"] = seconds
-        await self.bot.say("Value modified. At least {} seconds must pass "
+        await self.bot.say("Value modified. At least {:,} seconds must pass "
                            "between each payday.".format(seconds))
         dataIO.save_json(self.file_path, self.settings)
 
@@ -664,7 +710,7 @@ class Economy:
         """Credits earned each payday"""
         server = ctx.message.server
         self.settings[server.id]["PAYDAY_CREDITS"] = credits
-        await self.bot.say("Every payday will now give {} credits."
+        await self.bot.say("Every payday will now give {:,} credits."
                            "".format(credits))
         dataIO.save_json(self.file_path, self.settings)
 
