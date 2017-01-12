@@ -30,6 +30,46 @@ def inline(text):
 def italics(text):
     return "*{}*".format(text)
 
+def display_interval(seconds, granularity=2, short=False):
+    # What would I ever do without stackoverflow?
+    intervals = (  # Source: http://stackoverflow.com/a/24542445
+        (' years', 31536000), # 60 * 60 * 24 * 365
+        #(' weeks', 604800),  # 60 * 60 * 24 * 7
+        (' days', 86400),    # 60 * 60 * 24
+        (' hours', 3600),    # 60 * 60
+        (' minutes', 60),
+        (' seconds', 1),
+    )
+
+    if short:
+        intervals = (
+            (' y ', 31536000), # 60 * 60 * 24 * 365
+            #('', 604800),  # 60 * 60 * 24 * 7
+            (' d ', 86400),    # 60 * 60 * 24
+            (':', 3600),    # 60 * 60
+            (':', 60),
+            ('', 1),
+        )
+
+    result = []
+
+    if granularity is None or granularity <= 0:
+        granularity = 5
+
+    seconds = round(seconds)
+    for name, count in intervals:
+        value = seconds // count
+        if value:
+            seconds -= value * count
+            if short:
+                value = '{:02d}'.format(value)
+            elif value == 1:
+                name = name.rstrip('s')
+            result.append("{:,}{}".format(value, name))
+    if short:
+        return ''.join(result[:granularity]).lstrip('0')
+    else:
+        return ', '.join(result[:granularity])
 
 def pagify(text, delims=["\n"], *, escape=True, shorten_by=8,
            page_length=2000):

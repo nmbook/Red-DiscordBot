@@ -6,8 +6,12 @@ import os
 from random import shuffle, choice
 from cogs.utils.dataIO import dataIO
 from cogs.utils import checks
+<<<<<<< HEAD
 from cogs.utils.chat_formatting import pagify
 from urllib.parse import urlparse
+=======
+from cogs.utils.chat_formatting import pagify, display_interval
+>>>>>>> Move display_interval to utils and update it to support a "short" appearance - for Audio, Economy, .serverinfo/.userinfo
 from __main__ import send_cmd_help, settings
 from json import JSONDecodeError
 import re
@@ -293,7 +297,6 @@ class Audio:
         self.cache_path = "data/audio/cache"
         self.local_playlist_path = "data/audio/localtracks"
         #self._old_game = False
-        self.bot.loop.create_task(self._update_bot_status())
 
         self.skip_votes = {}
 
@@ -1921,13 +1924,7 @@ class Audio:
             if hasattr(song, 'upload_date') and not song.upload_date is None:
                 msg += '**Uploaded:** {}-{}-{}\n'.format(song.upload_date[:4], song.upload_date[4:6], song.upload_date[6:])
             if hasattr(song, 'duration') and not song.duration is None:
-                m, s = divmod(song.duration, 60)
-                h, m = divmod(m, 60)
-                if h:
-                    dur = "{0}:{1:0>2}:{2:0>2}".format(h, m, s)
-                else:
-                    dur = "{0}:{1:0>2}".format(m, s)
-                msg += '**Duration:** {}\n'.format(dur)
+                msg += '**Duration:** {}\n'.format(display_interval(song.duration, 3, True))
             if hasattr(song, 'thumbnail') and not song.thumbnail is None:
                 msg += '**Thumbnail:** {}\n'.format(song.thumbnail)
             if hasattr(song, 'view_count') and not song.view_count is None:
@@ -2238,6 +2235,9 @@ class Audio:
         for vc in self.bot.voice_clients:
             self.bot.loop.create_task(vc.disconnect())
 
+    async def ready(self):
+        self.bot.loop.create_task(self._update_bot_status())
+
 
 def check_folders():
     folders = ("data/audio", "data/audio/cache", "data/audio/playlists",
@@ -2321,6 +2321,7 @@ def setup(bot):
     n = Audio(bot, player=player)  # Praise 26
     bot.add_cog(n)
     bot.add_listener(n.voice_state_update, 'on_voice_state_update')
+    bot.add_listener(n.ready, 'on_ready')
     bot.loop.create_task(n.queue_scheduler())
     bot.loop.create_task(n.disconnect_timer())
     bot.loop.create_task(n.reload_monitor())

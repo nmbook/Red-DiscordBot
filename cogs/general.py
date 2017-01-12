@@ -187,15 +187,15 @@ class General:
         roles = [x.name for x in user.roles if x.name != "@everyone"]
 
         joined_at = self.fetch_joined_at(user, server)
-        since_created = (ctx.message.timestamp - user.created_at).days
-        since_joined = (ctx.message.timestamp - joined_at).days
+        since_created = (ctx.message.timestamp - user.created_at).total_seconds()
+        since_joined = (ctx.message.timestamp - joined_at).total_seconds()
         user_joined = joined_at.strftime("%d %b %Y %H:%M")
         user_created = user.created_at.strftime("%d %b %Y %H:%M")
         member_number = sorted(server.members,
                                key=lambda m: m.joined_at).index(user) + 1
 
-        created_on = "{}\n({} days ago)".format(user_created, since_created)
-        joined_on = "{}\n({} days ago)".format(user_joined, since_joined)
+        created_on = "{}\n({} ago)".format(user_created, display_interval(since_created, 2))
+        joined_on = "{}\n({} ago)".format(user_joined, display_interval(since_joined, 2))
 
         game = "Chilling in {} status".format(user.status)
 
@@ -240,23 +240,19 @@ class General:
         """Shows server's informations"""
         server = ctx.message.server
         online = len([m.status for m in server.members
-                      if m.status == discord.Status.online or
-                      m.status == discord.Status.idle])
+                      if m.status != discord.Status.online])
         total_users = len(server.members)
         text_channels = len([x for x in server.channels
                              if x.type == discord.ChannelType.text])
         voice_channels = len(server.channels) - text_channels
-        passed = (ctx.message.timestamp - server.created_at).days
-        created_at = ("Since {}. That's over {} days ago!"
+        passed = (ctx.message.timestamp - server.created_at).total_seconds()
+        created_at = ("Since {}. That's {} ago!"
                       "".format(server.created_at.strftime("%d %b %Y %H:%M"),
-                                passed))
-
-        colour = ''.join([choice('0123456789ABCDEF') for x in range(6)])
-        colour = int(colour, 16)
+                                display_interval(passed, 2)))
 
         data = discord.Embed(
             description=created_at,
-            colour=discord.Colour(value=colour))
+            colour=discord.Colour(value=0x2c2f33))
         data.add_field(name="Region", value=str(server.region))
         data.add_field(name="Users", value="{}/{}".format(online, total_users))
         data.add_field(name="Text Channels", value=text_channels)

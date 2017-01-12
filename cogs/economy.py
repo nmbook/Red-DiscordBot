@@ -5,7 +5,7 @@ from collections import namedtuple, defaultdict, deque
 from datetime import datetime
 from copy import deepcopy
 from .utils import checks
-from cogs.utils.chat_formatting import pagify, box
+from cogs.utils.chat_formatting import pagify, box, display_interval
 from enum import Enum
 from __main__ import send_cmd_help
 import os
@@ -433,8 +433,7 @@ class Economy:
                             author.mention,
                             str(self.settings[server.id]["PAYDAY_CREDITS"])))
                 else:
-                    dtime = self.display_time(
-                        self.settings[server.id]["PAYDAY_TIME"] - seconds)
+                    dtime = display_interval(self.settings[server.id]["PAYDAY_TIME"] - seconds)
                     await self.bot.say(
                         "{} Too soon. For your next payday you have to"
                         " wait {}.".format(author.mention, dtime))
@@ -578,7 +577,6 @@ class Economy:
         """Play the slot machine"""
         author = ctx.message.author
         server = author.server
-<<<<<<< HEAD
         settings = self.settings[server.id]
         valid_bid = settings["SLOT_MIN"] <= bid and bid <= settings["SLOT_MAX"]
         slot_time = settings["SLOT_TIME"]
@@ -610,6 +608,33 @@ class Economy:
 
     async def slot_machine(self, author, bid):
         default_reel = deque(SMReel)
+        if not self.bank.account_exists(author):
+            await self.bot.say("{} You need an account to use the slot machine. Type `{}bank register` to open one.".format(author.mention, ctx.prefix))
+            return
+        if self.bank.can_spend(author, bid):
+            if bid >= self.settings[server.id]["SLOT_MIN"] and bid <= self.settings[server.id]["SLOT_MAX"]:
+                if author.id in self.slot_register:
+                    if abs(self.slot_register[author.id] - int(time.perf_counter())) >= self.settings[server.id]["SLOT_TIME"]:
+                        self.slot_register[author.id] = int(
+                            time.perf_counter())
+                        await self.slot_machine(ctx.message, bid)
+                    else:
+                        await self.bot.say("Slot machine is still cooling off! Wait {} between each pull".format(display_interval(self.settings[server.id]["SLOT_TIME"])))
+                else:
+                    self.slot_register[author.id] = int(time.perf_counter())
+                    await self.slot_machine(ctx.message, bid)
+            else:
+                await self.bot.say("{} Bid must be between {:,} and {:,}.".format(author.mention, self.settings[server.id]["SLOT_MIN"], self.settings[server.id]["SLOT_MAX"]))
+        else:
+            await self.bot.say("{} You need an account with enough funds to play the slot machine.".format(author.mention))
+
+    async def slot_machine(self, message, bid):
+        reel_pattern = [":cherries:", ":cookie:", ":two:", ":four_leaf_clover:",
+                        ":cyclone:", ":sunflower:", ":six:", ":mushroom:", ":heart:", ":snowflake:"]
+        # padding prevents index errors
+        padding_before = [":mushroom:", ":heart:", ":snowflake:"]
+        padding_after = [":cherries:", ":cookie:", ":two:"]
+        reel = padding_before + reel_pattern + padding_after
         reels = []
         self.slot_register[author.id] = datetime.utcnow()
         for i in range(3):
@@ -693,7 +718,7 @@ class Economy:
         """Seconds between each slots use"""
         server = ctx.message.server
         self.settings[server.id]["SLOT_TIME"] = seconds
-        await self.bot.say("Cooldown is now {:,} seconds.".format(seconds))
+        await self.bot.say("Cooldown is now {}.".format(display_interval(seconds, 5)))
         dataIO.save_json(self.file_path, self.settings)
 
     @economyset.command(pass_context=True)
@@ -701,8 +726,8 @@ class Economy:
         """Seconds between each payday"""
         server = ctx.message.server
         self.settings[server.id]["PAYDAY_TIME"] = seconds
-        await self.bot.say("Value modified. At least {:,} seconds must pass "
-                           "between each payday.".format(seconds))
+        await self.bot.say("Value modified. At least {} must pass "
+                           "between each payday.".format(display_interval(seconds, 5)))
         dataIO.save_json(self.file_path, self.settings)
 
     @economyset.command(pass_context=True)
@@ -725,26 +750,6 @@ class Economy:
                            "".format(credits))
         dataIO.save_json(self.file_path, self.settings)
 
-    # What would I ever do without stackoverflow?
-    def display_time(self, seconds, granularity=2):
-        intervals = (  # Source: http://stackoverflow.com/a/24542445
-            ('weeks', 604800),  # 60 * 60 * 24 * 7
-            ('days', 86400),    # 60 * 60 * 24
-            ('hours', 3600),    # 60 * 60
-            ('minutes', 60),
-            ('seconds', 1),
-        )
-
-        result = []
-
-        for name, count in intervals:
-            value = seconds // count
-            if value:
-                seconds -= value * count
-                if value == 1:
-                    name = name.rstrip('s')
-                result.append("{} {}".format(value, name))
-        return ', '.join(result[:granularity])
 
 
 def check_folders():
