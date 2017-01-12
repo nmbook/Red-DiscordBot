@@ -1002,7 +1002,7 @@ class Owner:
             r'git config --get remote.origin.url',         # Remote URL
             r'git rev-list --count HEAD',                  # Number of commits
             r'git rev-parse --abbrev-ref HEAD',            # Branch name
-            r'git show -s -n 3 HEAD --format="%cr|%s|%H"'  # Last 3 commits
+            r'git show -s -n 5 HEAD --format="%cr|%s|%H"'  # Last 5 commits
         ))
         result = os.popen(commands).read()
         url, ncommits, branch, commits = result.split("\n", 3)
@@ -1014,7 +1014,7 @@ class Owner:
         repo_name = url.split("/")[-1]
 
         embed = discord.Embed(title="Updates of " + repo_name,
-                              description="Last three updates",
+                              description="Last five updates",
                               colour=discord.Colour.red(),
                               url="{}/tree/{}".format(url, branch))
 
