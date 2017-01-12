@@ -95,6 +95,7 @@ class Mod:
     def __init__(self, bot):
         self.bot = bot
         self.ignore_list = dataIO.load_json("data/mod/ignorelist.json")
+        self.chancom_list = dataIO.load_json("data/mod/chancom_list.json")
         self.filter = dataIO.load_json("data/mod/filter.json")
         self.past_names = dataIO.load_json("data/mod/past_names.json")
         self.past_nicknames = dataIO.load_json("data/mod/past_nicknames.json")
@@ -1128,6 +1129,70 @@ class Mod:
         msg += str(len(self.ignore_list["SERVERS"])) + " servers\n```\n"
         return msg
 
+    @commands.group(pass_context=True, aliases=["chancom", "chco"])
+    @checks.is_owner()
+    async def channelcommand(self, ctx):
+        """Specific commands allowed for specific channels, bypassing the list of ignored channels"""
+        if ctx.invoked_subcommand is None:
+            await send_cmd_help(ctx)
+
+    @channelcommand.command(name="add", pass_context=True)
+    async def _channelcommand_add(self, ctx, word, channel: discord.Channel = None):
+        """Adds command/cog to list of channel-specific commands"""
+        current_ch = ctx.message.channel
+        cog = None
+        for key, command in self.bot.commands.items():
+            if not command.cog_name is None:
+                if key.lower() == word.lower() or \
+                        command.name.lower() == word.lower() or \
+                        word.lower() in ' '.join(command.aliases).lower() or \
+                        word.lower() == command.cog_name.lower():
+                    cog = command.cog_name
+        if cog is None:
+            await self.bot.say("Command or cog not found: {}".format(word))
+            return
+
+        if not channel:
+            channel = current_ch
+        if not channel.id in self.chancom_list:
+            self.chancom_list[channel.id] = []
+        if cog in self.chancom_list[channel.id]:
+            await self.bot.say("The channel {} already allows '{}' commands.".format(channel, cog))
+        else:
+            self.chancom_list[channel.id].append(cog)
+            dataIO.save_json("data/mod/chancom_list.json", self.chancom_list)
+            await self.bot.say("You may now always use '{}' commands in {} (even if this channel is ignored).".format(cog, channel.mention))
+
+    @channelcommand.command(name="remove", pass_context=True)
+    async def _channelcommand_remove(self, ctx, word, channe: discord.Channel = None):
+        """Removes command/cog from list of channel-specific commands"""
+        current_ch = ctx.message.channel
+        cog = None
+        for key, command in self.bot.commands.items():
+            if key.lower() == word.lower() or \
+                    command.name.lower() == word.lower() or \
+                    word.lower() in ' '.join(command.aliases).lower() or \
+                    word.lower() == command.cog_name.lower():
+                cog = command.cog_name
+        if cog is None:
+            await self.bot.say("Command or cog not found: {}".format(word))
+            return
+        if not channel:
+            channel = current_ch
+        if not channel.id in self.chancom_list or not cog in self.chancom_list[channel.id]:
+            await self.bot.say("The channel {} does not allow '{}' commands.".format(channel, cog))
+        else:
+            self.chancom_list[channel.id].remove(cog)
+            dataIO.save_json("data/mod/chancom_list.json", self.chancom_list)
+            await self.bot.say("You may no longer use '{}' commands in {} (unless this channel is unignored).".format(cog, channel.mention))
+
+    @channelcommand.command(name="clear")
+    async def _channelcommand_clear(self):
+        """Clears the whitelist"""
+        self.chancom_list = {}
+        dataIO.save_json("data/mod/chancom_list.json", self.chancom_list)
+        await self.bot.say("Channel-specific commands list is now empty.")
+
     @commands.group(name="filter", pass_context=True, no_pm=True)
     @checks.mod_or_permissions(manage_messages=True)
     async def _filter(self, ctx):
@@ -1688,6 +1753,7 @@ def check_files():
 
     files = {
         "ignorelist.json"     : ignore_list,
+        "chancom_list.json"   : {},
         "filter.json"         : {},
         "past_names.json"     : {},
         "past_nicknames.json" : {},

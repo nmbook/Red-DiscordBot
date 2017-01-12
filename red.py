@@ -173,8 +173,20 @@ class Bot(commands.Bot):
                 if r is not None:
                     return True
 
-        if mod_cog is not None:
-            if not message.channel.is_private:
+            if mod_cog is not None:
+                if mod.chancom_list:
+                    for key, command in self.commands.items():
+                        if message.channel.id in mod.chancom_list:
+                            if not command.cog_name is None and command.cog_name in mod.chancom_list[message.channel.id]:
+                                for prefix in self.settings.prefixes:
+                                    if message.content.startswith(prefix + command.name + ' '):
+                                        #print(prefix + command.name + ' ')
+                                        return True
+                                    for alias in command.aliases:
+                                        if message.content.startswith(prefix + alias + ' '):
+                                            #print(prefix + alias + ' ')
+                                            return True
+
                 if message.server.id in mod_cog.ignore_list["SERVERS"]:
                     return False
 
