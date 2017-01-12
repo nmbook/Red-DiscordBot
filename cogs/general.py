@@ -42,6 +42,75 @@ class General:
                      "Signs point to yes", "Without a doubt", "Yes", "Yes – definitely", "You may rely on it",
                      "Don't count on it", "My reply is no", "My sources say no", "Outlook not so good", "Very doubtful"]
                      #"Reply hazy, try again", "Ask again later", "Better not tell you now", "Cannot predict now", "Concentrate and ask again",
+        self.flip_tbl = { # better flip src: http://www.fileformat.info/convert/text/upside-down-map.htm
+        '\u0021' : '\u00A1',
+        '\u0022' : '\u201E',
+        '\u0026' : '\u214B',
+        '\u0027' : '\u002C',
+        '\u0028' : '\u0029',
+        '\u002E' : '\u02D9',
+        '\u0033' : '\u0190',
+        '\u0034' : '\u152D',
+        '\u0036' : '\u0039',
+        '\u0037' : '\u2C62',
+        '\u003B' : '\u061B',
+        '\u003C' : '\u003E',
+        '\u003F' : '\u00BF',
+        '\u0041' : '\u2200',
+        '\u0042' : '\u10412',
+        '\u0043' : '\u2183',
+        '\u0044' : '\u25D6',
+        '\u0045' : '\u018E',
+        '\u0046' : '\u2132',
+        '\u0047' : '\u2141',
+        '\u004A' : '\u017F',
+        '\u004B' : '\u22CA',
+        '\u004C' : '\u2142',
+        '\u004D' : '\u0057',
+        '\u004E' : '\u1D0E',
+        '\u0050' : '\u0500',
+        '\u0051' : '\u038C',
+        '\u0052' : '\u1D1A',
+        '\u0054' : '\u22A5',
+        '\u0055' : '\u2229',
+        '\u0056' : '\u1D27',
+        '\u0059' : '\u2144',
+        '\u005B' : '\u005D',
+        '\u005F' : '\u203E',
+        '\u0061' : '\u0250',
+        '\u0062' : '\u0071',
+        '\u0063' : '\u0254',
+        '\u0064' : '\u0070',
+        '\u0065' : '\u01DD',
+        '\u0066' : '\u025F',
+        '\u0067' : '\u0183',
+        '\u0068' : '\u0265',
+        '\u0069' : '\u0131',
+        '\u006A' : '\u027E',
+        '\u006B' : '\u029E',
+        '\u006C' : '\u0283',
+        '\u006D' : '\u026F',
+        '\u006E' : '\u0075',
+        '\u0072' : '\u0279',
+        '\u0074' : '\u0287',
+        '\u0076' : '\u028C',
+        '\u0077' : '\u028D',
+        '\u0079' : '\u028E',
+        '\u007B' : '\u007D',
+        '\u203F' : '\u2040',
+        '\u2045' : '\u2046',
+        '\u2234' : '\u2235'
+        }
+        flip_tbl_inverse = {v: k for k, v in self.flip_tbl.items()}
+        self.flip_tbl = {**self.flip_tbl, **flip_tbl_inverse}
+        self.cond = {
+                (RPS.rock,     RPS.paper)    : False,
+                (RPS.rock,     RPS.scissors) : True,
+                (RPS.paper,    RPS.rock)     : True,
+                (RPS.paper,    RPS.scissors) : False,
+                (RPS.scissors, RPS.rock)     : False,
+                (RPS.scissors, RPS.paper)    : True
+               }
         self.poll_sessions = []
 
     @commands.command(hidden=True)
@@ -49,17 +118,18 @@ class General:
         """Pong."""
         await self.bot.say("Pong.")
 
-    @commands.command()
-    async def choose(self, *choices):
+    @commands.command(pass_context=True)
+    async def choose(self, ctx, *choices):
         """Chooses between multiple choices.
 
         To denote multiple choices, you should use double quotes.
         """
+        author = ctx.message.author
         choices = [escape_mass_mentions(c) for c in choices]
         if len(choices) < 2:
-            await self.bot.say('Not enough choices to pick from.')
+            await self.bot.say('{} Not enough choices to pick from.'.format(author.mention))
         else:
-            await self.bot.say(choice(choices))
+            await self.bot.say('{} I choose: {}'.format(author.mention, choice(choices)))
 
     @commands.command(pass_context=True)
     async def roll(self, ctx, number : int = 100):
@@ -80,22 +150,30 @@ class General:
 
         Defaults to coin.
         """
+        author = ctx.message.author
         if user != None:
             msg = ""
             if user.id == self.bot.user.id:
                 user = ctx.message.author
                 msg = "Nice try. You think this is funny? How about *this* instead:\n\n"
-            char = "abcdefghijklmnopqrstuvwxyz"
-            tran = "ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz"
-            table = str.maketrans(char, tran)
-            name = user.display_name.translate(table)
-            char = char.upper()
-            tran = "∀qƆpƎℲפHIſʞ˥WNOԀQᴚS┴∩ΛMX⅄Z"
-            table = str.maketrans(char, tran)
-            name = name.translate(table)
-            await self.bot.say(msg + "(╯°□°）╯︵ " + name[::-1])
+            #char = "abcdefghijklmnopqrstuvwxyz0123456789"
+            #tran = "ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz"
+            #table = str.maketrans(char, tran)
+            #char = char.upper()
+            #tran = "∀qƆpƎℲפHIſʞ˥WNOԀQᴚS┴∩ΛMX⅄Z"
+            #table = str.maketrans(char, tran)
+            #name = name.translate(table)
+            name = user.display_name
+            new_name = ''
+            for char in name:
+                if char in self.flip_tbl:
+                    new_name += self.flip_tbl[char]
+                else:
+                    new_name += char
+            await self.bot.say('{}{}(╯°□°）╯︵ {}'.format(author.mention, msg, new_name[::-1]))
         else:
-            await self.bot.say("*flips a coin and... " + choice(["HEADS!*", "TAILS!*"]))
+            await self.bot.say('{}\r\n*flips a coin and... **{}**!*'.format(
+                author.mention, choice(["HEADS", "TAILS"])))
 
     @commands.command(pass_context=True)
     async def rps(self, ctx, your_choice : RPSParser):
@@ -103,40 +181,33 @@ class General:
         author = ctx.message.author
         player_choice = your_choice.choice
         red_choice = choice((RPS.rock, RPS.paper, RPS.scissors))
-        cond = {
-                (RPS.rock,     RPS.paper)    : False,
-                (RPS.rock,     RPS.scissors) : True,
-                (RPS.paper,    RPS.rock)     : True,
-                (RPS.paper,    RPS.scissors) : False,
-                (RPS.scissors, RPS.rock)     : False,
-                (RPS.scissors, RPS.paper)    : True
-               }
 
         if red_choice == player_choice:
             outcome = None # Tie
         else:
-            outcome = cond[(player_choice, red_choice)]
+            outcome = self.cond[(player_choice, red_choice)]
 
         if outcome is True:
-            await self.bot.say("{} You win {}!"
+            await self.bot.say("I chose {}. You win, {}!"
                                "".format(red_choice.value, author.mention))
         elif outcome is False:
-            await self.bot.say("{} You lose {}!"
+            await self.bot.say("I chose {}. You lose, {}!"
                                "".format(red_choice.value, author.mention))
         else:
-            await self.bot.say("{} We're square {}!"
+            await self.bot.say("I chose {}. We're square, {}!"
                                "".format(red_choice.value, author.mention))
 
-    @commands.command(name="8", aliases=["8ball"])
-    async def _8ball(self, *, question : str):
+    @commands.command(name="8", aliases=["8ball"], pass_context=True)
+    async def _8ball(self, ctx, *, question : str):
         """Ask 8 ball a question
 
         Question must end with a question mark.
         """
+        author = ctx.message.author
         if question.endswith("?") and question != "?":
-            await self.bot.say("`" + choice(self.ball) + "`")
+            await self.bot.say('{} `{}`'.format(author.mention, choice(self.ball)))
         else:
-            await self.bot.say("That doesn't look like a question.")
+            await self.bot.say('{} That doesn\'t look like a question.'.format(author.mention))
 
     @commands.command(aliases=["sw"], pass_context=True)
     async def stopwatch(self, ctx):
@@ -144,11 +215,11 @@ class General:
         author = ctx.message.author
         if not author.id in self.stopwatches:
             self.stopwatches[author.id] = int(time.perf_counter())
-            await self.bot.say(author.mention + " Stopwatch started!")
+            await self.bot.say('{} Stopwatch started!'.format(author.mention))
         else:
             tmp = abs(self.stopwatches[author.id] - int(time.perf_counter()))
             tmp = str(datetime.timedelta(seconds=tmp))
-            await self.bot.say(author.mention + " Stopwatch stopped! Time: **" + tmp + "**")
+            await self.bot.say('{} Stopwatch stopped! Time: **{}**'.format(author.mention, tmp))
             self.stopwatches.pop(author.id, None)
 
     @commands.command()
