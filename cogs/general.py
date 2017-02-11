@@ -360,7 +360,66 @@ class General:
 
         try:
             await self.bot.say(embed=data)
-        except discord.HTTPException:
+        except discord.HTTPException as ex:
+            await self.bot.say("I need the `Embed links` permission "
+                               "to send this")
+
+    @commands.command(pass_context=True, no_pm=True, aliases=['emoji', 'emojis'])
+    async def emojiinfo(self, ctx):
+        """Shows server's emojis informations"""
+        server = ctx.message.server
+
+        emoji_cats = [
+                {'name': 'Falcom', 'entries': ['Mishy']},
+                {'name': 'Gurumin', 'entries': ['ParinDisgust']},
+                {'name': 'Xanadu Next', 'entries': ['BraveKnight', 'InventoryChar']},
+                {'name': 'Brandish', 'entries': []},
+                {'name': 'Zwei!!', 'entries': ['PipiroConfident']},
+                {'name': 'Ys', 'entries': ['AdolDistressed', 'AdolAmerica', 'AdolCelceta', 'AdolSparkles', 'ParoParrot', 'CalilicaTaunt', 'FriedaWink', 'KarnaSigh', 'LeezaDistant', 'OzmaAnger', 'DurenLaugh', 'AishaSlap', 'DogiWallCrushing', 'GeisStunned', 'LiliaOffering', 'TiaSurprise', 'Pikkard']},
+                {'name': 'Trails in the Sky', 'entries': ['DukeDizzy', 'ScheraSing', 'CampanellaBow', 'KevinWink', 'EinLaugh', 'ErikaStars', 'EstelleGlare', 'EstelleSmug', 'OlivierLoveSeeker', 'TitaSigh', 'PhantomThiefBeauty', 'GilbertBlorf', 'DaddyDisappointed', 'CapuaDelivery', 'SiegGyrfalcon', 'PrincessJoshua', 'RenneSmug', 'OsBro', 'AnelaceSweets', 'Estdull']},
+                {'name': 'Trails to Zero/Azure', 'entries': []},
+                {'name': 'Trails of Cold Steel', 'entries': ['ReanHalt', 'FieGlare', 'JusisShrug', 'MachiasRage', 'MilliumLetsGo', 'TowaSmile', 'OsBro', 'AbsolutelyDuNot', 'LauraConfused']},
+                {'name': 'Akatsuki no Kiseki', 'entries': ['NachtEdge', 'ChloeExcited', 'LifSmug']},
+                ]
+
+        emoji_text = ''.join([str(x) for x in server.emojis])
+
+        data = discord.Embed(
+            description='Emoji List',
+            colour=discord.Colour(value=0x2c2f33))
+
+        uncat_cat = {'name': 'Uncategorized', 'entries': []}
+        for emoji in server.emojis:
+            uncat = True
+            for emoji_cat in emoji_cats:
+                if emoji.name in emoji_cat['entries']:
+                    uncat = False
+                    break
+            if uncat:
+                uncat_cat['entries'].append(emoji.name)
+
+        if len(uncat_cat['entries']):
+            emoji_cats.append(uncat_cat)
+
+        for emoji_cat in emoji_cats:
+            emoji_cat['objs'] = []
+            for emoji in server.emojis:
+                if emoji.name in emoji_cat['entries']:
+                    emoji_cat['objs'].append(emoji)
+            if len(emoji_cat['objs']):
+                data.add_field(name=emoji_cat['name'], value=''.join([str(x) for x in emoji_cat['objs']]))
+
+        data.set_footer(text="Requested by {}".format(ctx.message.author))
+
+        if server.icon_url:
+            data.set_author(name=server.name, url=server.icon_url)
+            data.set_thumbnail(url=server.icon_url)
+        else:
+            data.set_author(name=server.name)
+
+        try:
+            await self.bot.say(embed=data)
+        except discord.HTTPException as ex:
             await self.bot.say("I need the `Embed links` permission "
                                "to send this")
 
