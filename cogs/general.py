@@ -262,8 +262,14 @@ class General:
         since_joined = (ctx.message.timestamp - joined_at).total_seconds()
         user_joined = joined_at.strftime("%d %b %Y %H:%M")
         user_created = user.created_at.strftime("%d %b %Y %H:%M")
-        member_number = sorted(server.members,
-                               key=lambda m: m.joined_at).index(user) + 1
+        sorted_members = sorted(server.members, key=lambda m: m.joined_at)
+        member_number = sorted_members.index(user) + 1
+        before_text = ''
+        if member_number > 1:
+            before_text = str(sorted_members[member_number - 2]) + ' > '
+        after_text = ''
+        if member_number < len(sorted_members):
+            after_text = ' > ' + str(sorted_members[member_number])
 
         created_on = "{}\n({} ago)".format(user_created, display_interval(since_created, 2))
         joined_on = "{}\n({} ago)".format(user_joined, display_interval(since_joined, 2))
@@ -288,8 +294,8 @@ class General:
         data.add_field(name="Joined Discord on", value=created_on)
         data.add_field(name="Joined this server on", value=joined_on)
         data.add_field(name="Roles", value=roles, inline=False)
-        data.set_footer(text="Member #{} | User ID:{}"
-                             "".format(member_number, user.id))
+        data.add_field(name="Member position", value='{}: {}**{}**{}'.format(member_number, before_text, user, after_text))
+        data.set_footer(text="Requested by {} | User ID: {}".format(author, user.id))
 
         name = str(user)
         name = " ~ ".join((name, user.nick)) if user.nick else name
