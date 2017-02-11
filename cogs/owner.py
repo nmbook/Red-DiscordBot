@@ -833,8 +833,8 @@ class Owner:
         else:
             await self.bot.say("Your message has been sent.")
 
-    @commands.command()
-    async def info(self):
+    @commands.command(pass_context=True)
+    async def info(self, ctx):
         """Shows info about Red"""
         author_repo = "https://github.com/Twentysix26"
         red_repo = author_repo + "/Red-DiscordBot"
@@ -872,8 +872,7 @@ class Owner:
         embed.add_field(name="Python", value=py_version)
         embed.add_field(name="discord.py", value=dpy_version)
         embed.add_field(name="About Red", value=about, inline=False)
-        embed.set_footer(text="Bringing joy since 02 Jan 2016 (over "
-                         "{} days ago!)".format(days_since))
+        embed.set_footer(text="Requested by {} | Bringing joy since 02 Jan 2016 (over {} days ago!)".format(ctx.message.author, days_since))
 
         try:
             await self.bot.say(embed=embed)
@@ -889,10 +888,10 @@ class Owner:
         await self.bot.say("Been up for: **{}** (since {} UTC)"
                            "".format(passed, since))
 
-    @commands.command()
-    async def version(self):
+    @commands.command(pass_context=True)
+    async def version(self, ctx):
         """Shows Red's current version"""
-        response = self.bot.loop.run_in_executor(None, self._get_version)
+        response = self.bot.loop.run_in_executor(None, self._get_version, ctx)
         result = await asyncio.wait_for(response, timeout=10)
         try:
             await self.bot.say(embed=result)
@@ -991,6 +990,7 @@ class Owner:
             print("The set owner request has been ignored.")
             self.setowner_lock = False
 
+<<<<<<< HEAD
     def _get_version(self):
         if not os.path.isdir(".git"):
             msg = "This instance of Red hasn't been installed with git."
@@ -1011,6 +1011,8 @@ class Owner:
         if url.startswith("git@"):
             domain, _, resource = url[4:].partition(':')
             url = 'https://{}/{}'.format(domain, resource)
+
+        url = url.read().strip()[:-4]
         repo_name = url.split("/")[-1]
 
         embed = discord.Embed(title="Updates of " + repo_name,
@@ -1025,8 +1027,8 @@ class Owner:
             commit_url = url + "/commit/" + chash
             content = "[{}]({}) - {} ".format(chash[:6], commit_url, commit)
             embed.add_field(name=when, value=content, inline=False)
-
-        embed.set_footer(text="Total commits: " + ncommits)
+        embed.add_field(name='Total commits: {}'.format(ncommits))
+        embed.set_footer(text="Requested by {}".format(ctx.message.author))
 
         return embed
 

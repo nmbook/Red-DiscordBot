@@ -317,7 +317,7 @@ class General:
         """Shows server's informations"""
         server = ctx.message.server
         online = len([m.status for m in server.members
-                      if m.status != discord.Status.online])
+                      if m.status != discord.Status.offline])
         total_users = len(server.members)
         text_channels = len([x for x in server.channels
                              if x.type == discord.ChannelType.text])
@@ -326,6 +326,18 @@ class General:
         created_at = ("Since {}. That's {} ago!"
                       "".format(server.created_at.strftime("%d %b %Y %H:%M"),
                                 display_interval(passed, 2)))
+
+        verif_level_text = 'Unknown'
+        if   server.verification_level == discord.VerificationLevel.none:
+            verif_level_text = 'None'
+        elif server.verification_level == discord.VerificationLevel.low:
+            verif_level_text = 'Low'
+        elif server.verification_level == discord.VerificationLevel.medium:
+            verif_level_text = 'Medium'
+        elif server.verification_level == discord.VerificationLevel.high:
+            verif_level_text = '(╯°□°）╯︵ ┻━┻'
+
+        emoji_text = ''.join([str(x) for x in server.emojis])
 
         data = discord.Embed(
             description=created_at,
@@ -336,7 +348,9 @@ class General:
         data.add_field(name="Voice Channels", value=voice_channels)
         data.add_field(name="Roles", value=len(server.roles))
         data.add_field(name="Owner", value=str(server.owner))
-        data.set_footer(text="Server ID: " + server.id)
+        data.add_field(name="Emoji", value="{}/{}".format(len(server.emojis), 50))
+        data.add_field(name="Verification Level", value=verif_level_text)
+        data.set_footer(text="Requested by {} | Server ID: {}".format(ctx.message.author, server.id))
 
         if server.icon_url:
             data.set_author(name=server.name, url=server.icon_url)
