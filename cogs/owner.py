@@ -1016,7 +1016,7 @@ class Owner:
         repo_name = url.split("/")[-1]
 
         embed = discord.Embed(title="Updates of " + repo_name,
-                              description="Last five updates",
+                              description="Last 5 updates",
                               colour=discord.Colour.red(),
                               url="{}/tree/{}".format(url, branch))
 
