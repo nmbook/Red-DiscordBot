@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from .utils.chat_formatting import escape_mass_mentions, italics, pagify
+from .utils.chat_formatting import escape_mass_mentions, italics, pagify, display_interval
 from random import randint
 from random import choice
 from enum import Enum
