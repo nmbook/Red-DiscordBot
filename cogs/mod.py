@@ -1129,16 +1129,16 @@ class Mod:
         msg += str(len(self.ignore_list["SERVERS"])) + " servers\n```\n"
         return msg
 
-    @commands.group(pass_context=True, aliases=["chancom", "chco"])
-    @checks.is_owner()
-    async def channelcommand(self, ctx):
-        """Specific commands allowed for specific channels, bypassing the list of ignored channels"""
+    @commands.group(pass_context=True, aliases=["allowc", "allowcc"])
+    @checks.admin_or_permissions(manage_channels=True)
+    async def allowcog(self, ctx):
+        """Specific cog/module commands allowed for specific channels, bypassing the list of ignored channels"""
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
 
-    @channelcommand.command(name="add", pass_context=True)
-    async def _channelcommand_add(self, ctx, word, channel: discord.Channel = None):
-        """Adds command/cog to list of channel-specific commands"""
+    @allowcog.command(name="add", pass_context=True)
+    async def _allowcog_add(self, ctx, word, channel: discord.Channel = None):
+        """Adds cog to list of channel-specific cogs"""
         current_ch = ctx.message.channel
         cog = None
         for key, command in self.bot.commands.items():
@@ -1149,7 +1149,7 @@ class Mod:
                         word.lower() == command.cog_name.lower():
                     cog = command.cog_name
         if cog is None:
-            await self.bot.say("Command or cog not found: {}".format(word))
+            await self.bot.say("Command or cog not found: `{}`".format(word))
             return
 
         if not channel:
@@ -1157,15 +1157,15 @@ class Mod:
         if not channel.id in self.chancom_list:
             self.chancom_list[channel.id] = []
         if cog in self.chancom_list[channel.id]:
-            await self.bot.say("The channel {} already allows '{}' commands.".format(channel, cog))
+            await self.bot.say("The channel {} already specifically allows the '{}' cog.".format(channel, cog))
         else:
             self.chancom_list[channel.id].append(cog)
             dataIO.save_json("data/mod/chancom_list.json", self.chancom_list)
-            await self.bot.say("You may now always use '{}' commands in {} (even if this channel is ignored).".format(cog, channel.mention))
+            await self.bot.say("You may now always use the '{}' cog in {} (even if the channel is ignored).".format(cog, channel.mention, ctx.prefix[0]))
 
-    @channelcommand.command(name="remove", pass_context=True)
-    async def _channelcommand_remove(self, ctx, word, channe: discord.Channel = None):
-        """Removes command/cog from list of channel-specific commands"""
+    @allowcog.command(name="remove", pass_context=True)
+    async def _allowcog_remove(self, ctx, word, channel: discord.Channel = None):
+        """Removes cog from list of channel-specific cogs"""
         current_ch = ctx.message.channel
         cog = None
         for key, command in self.bot.commands.items():
@@ -1175,23 +1175,23 @@ class Mod:
                     word.lower() == command.cog_name.lower():
                 cog = command.cog_name
         if cog is None:
-            await self.bot.say("Command or cog not found: {}".format(word))
+            await self.bot.say("Command or cog not found: `{}`".format(word))
             return
         if not channel:
             channel = current_ch
         if not channel.id in self.chancom_list or not cog in self.chancom_list[channel.id]:
-            await self.bot.say("The channel {} does not allow '{}' commands.".format(channel, cog))
+            await self.bot.say("The channel {} does not specifically allow the '{}' cog.".format(channel, cog))
         else:
             self.chancom_list[channel.id].remove(cog)
             dataIO.save_json("data/mod/chancom_list.json", self.chancom_list)
-            await self.bot.say("You may no longer use '{}' commands in {} (unless this channel is unignored).".format(cog, channel.mention))
+            await self.bot.say("You may no longer use '{}' commands in {} (unless the channel is unignored).".format(cog, channel.mention))
 
-    @channelcommand.command(name="clear")
-    async def _channelcommand_clear(self):
-        """Clears the whitelist"""
+    @allowcog.command(name="clear")
+    async def _allowcog_clear(self):
+        """Clears the list of channel-specific cogs"""
         self.chancom_list = {}
         dataIO.save_json("data/mod/chancom_list.json", self.chancom_list)
-        await self.bot.say("Channel-specific commands list is now empty.")
+        await self.bot.say("Channel-specific cog overrides list is now empty.")
 
     @commands.group(name="filter", pass_context=True, no_pm=True)
     @checks.mod_or_permissions(manage_messages=True)
@@ -1684,6 +1684,22 @@ class Mod:
             await self.new_case(server,
                                 user=user,
                                 action="UNBAN")
+
+    async def on_member_join(self, member):
+        server = member.server
+        mod_channel = server.get_channel(self.settings[server.id]["mod-log"])
+        if mod_channel is None:
+            return
+
+        await self.bot.send_message(mod_channel, '{} has joined {}.'.format(str(member), str(server)))
+
+    async def on_member_remove(self, member):
+        server = member.server
+        mod_channel = server.get_channel(self.settings[server.id]["mod-log"])
+        if mod_channel is None:
+            return
+
+        await self.bot.send_message(mod_channel, '{} has left {}.'.format(str(member), str(server)))
 
     async def check_names(self, before, after):
         if before.name != after.name:

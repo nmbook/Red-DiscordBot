@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from .utils.chat_formatting import escape_mass_mentions, italics, pagify, display_interval
+from .utils.chat_formatting import escape_mass_mentions, italics, pagify
 from random import randint
 from random import choice
 from enum import Enum
@@ -39,78 +39,9 @@ class General:
         self.bot = bot
         self.stopwatches = {}
         self.ball = ["As I see it, yes", "It is certain", "It is decidedly so", "Most likely", "Outlook good",
-                     "Signs point to yes", "Without a doubt", "Yes", "Yes – definitely", "You may rely on it",
+                     "Signs point to yes", "Without a doubt", "Yes", "Yes – definitely", "You may rely on it", "Reply hazy, try again",
+                     "Ask again later", "Better not tell you now", "Cannot predict now", "Concentrate and ask again",
                      "Don't count on it", "My reply is no", "My sources say no", "Outlook not so good", "Very doubtful"]
-                     #"Reply hazy, try again", "Ask again later", "Better not tell you now", "Cannot predict now", "Concentrate and ask again",
-        self.flip_tbl = { # better flip src: http://www.fileformat.info/convert/text/upside-down-map.htm
-        '\u0021' : '\u00A1',
-        '\u0022' : '\u201E',
-        '\u0026' : '\u214B',
-        '\u0027' : '\u002C',
-        '\u0028' : '\u0029',
-        '\u002E' : '\u02D9',
-        '\u0033' : '\u0190',
-        '\u0034' : '\u152D',
-        '\u0036' : '\u0039',
-        '\u0037' : '\u2C62',
-        '\u003B' : '\u061B',
-        '\u003C' : '\u003E',
-        '\u003F' : '\u00BF',
-        '\u0041' : '\u2200',
-        '\u0042' : '\u10412',
-        '\u0043' : '\u2183',
-        '\u0044' : '\u25D6',
-        '\u0045' : '\u018E',
-        '\u0046' : '\u2132',
-        '\u0047' : '\u2141',
-        '\u004A' : '\u017F',
-        '\u004B' : '\u22CA',
-        '\u004C' : '\u2142',
-        '\u004D' : '\u0057',
-        '\u004E' : '\u1D0E',
-        '\u0050' : '\u0500',
-        '\u0051' : '\u038C',
-        '\u0052' : '\u1D1A',
-        '\u0054' : '\u22A5',
-        '\u0055' : '\u2229',
-        '\u0056' : '\u1D27',
-        '\u0059' : '\u2144',
-        '\u005B' : '\u005D',
-        '\u005F' : '\u203E',
-        '\u0061' : '\u0250',
-        '\u0062' : '\u0071',
-        '\u0063' : '\u0254',
-        '\u0064' : '\u0070',
-        '\u0065' : '\u01DD',
-        '\u0066' : '\u025F',
-        '\u0067' : '\u0183',
-        '\u0068' : '\u0265',
-        '\u0069' : '\u0131',
-        '\u006A' : '\u027E',
-        '\u006B' : '\u029E',
-        '\u006C' : '\u0283',
-        '\u006D' : '\u026F',
-        '\u006E' : '\u0075',
-        '\u0072' : '\u0279',
-        '\u0074' : '\u0287',
-        '\u0076' : '\u028C',
-        '\u0077' : '\u028D',
-        '\u0079' : '\u028E',
-        '\u007B' : '\u007D',
-        '\u203F' : '\u2040',
-        '\u2045' : '\u2046',
-        '\u2234' : '\u2235'
-        }
-        flip_tbl_inverse = {v: k for k, v in self.flip_tbl.items()}
-        self.flip_tbl = {**self.flip_tbl, **flip_tbl_inverse}
-        self.cond = {
-                (RPS.rock,     RPS.paper)    : False,
-                (RPS.rock,     RPS.scissors) : True,
-                (RPS.paper,    RPS.rock)     : True,
-                (RPS.paper,    RPS.scissors) : False,
-                (RPS.scissors, RPS.rock)     : False,
-                (RPS.scissors, RPS.paper)    : True
-               }
         self.poll_sessions = []
 
     @commands.command(hidden=True)
@@ -118,18 +49,17 @@ class General:
         """Pong."""
         await self.bot.say("Pong.")
 
-    @commands.command(pass_context=True)
-    async def choose(self, ctx, *choices):
+    @commands.command()
+    async def choose(self, *choices):
         """Chooses between multiple choices.
 
         To denote multiple choices, you should use double quotes.
         """
-        author = ctx.message.author
         choices = [escape_mass_mentions(c) for c in choices]
         if len(choices) < 2:
-            await self.bot.say('{} Not enough choices to pick from.'.format(author.mention))
+            await self.bot.say('Not enough choices to pick from.')
         else:
-            await self.bot.say('{} I choose: {}'.format(author.mention, choice(choices)))
+            await self.bot.say(choice(choices))
 
     @commands.command(pass_context=True)
     async def roll(self, ctx, number : int = 100):
@@ -150,30 +80,22 @@ class General:
 
         Defaults to coin.
         """
-        author = ctx.message.author
         if user != None:
             msg = ""
             if user.id == self.bot.user.id:
                 user = ctx.message.author
                 msg = "Nice try. You think this is funny? How about *this* instead:\n\n"
-            #char = "abcdefghijklmnopqrstuvwxyz0123456789"
-            #tran = "ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz"
-            #table = str.maketrans(char, tran)
-            #char = char.upper()
-            #tran = "∀qƆpƎℲפHIſʞ˥WNOԀQᴚS┴∩ΛMX⅄Z"
-            #table = str.maketrans(char, tran)
-            #name = name.translate(table)
-            name = user.display_name
-            new_name = ''
-            for char in name:
-                if char in self.flip_tbl:
-                    new_name += self.flip_tbl[char]
-                else:
-                    new_name += char
-            await self.bot.say('{}{}(╯°□°）╯︵ {}'.format(author.mention, msg, new_name[::-1]))
+            char = "abcdefghijklmnopqrstuvwxyz"
+            tran = "ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz"
+            table = str.maketrans(char, tran)
+            name = user.display_name.translate(table)
+            char = char.upper()
+            tran = "∀qƆpƎℲפHIſʞ˥WNOԀQᴚS┴∩ΛMX⅄Z"
+            table = str.maketrans(char, tran)
+            name = name.translate(table)
+            await self.bot.say(msg + "(╯°□°）╯︵ " + name[::-1])
         else:
-            await self.bot.say('{}\r\n*flips a coin and... **{}**!*'.format(
-                author.mention, choice(["HEADS", "TAILS"])))
+            await self.bot.say("*flips a coin and... " + choice(["HEADS!*", "TAILS!*"]))
 
     @commands.command(pass_context=True)
     async def rps(self, ctx, your_choice : RPSParser):
@@ -181,33 +103,40 @@ class General:
         author = ctx.message.author
         player_choice = your_choice.choice
         red_choice = choice((RPS.rock, RPS.paper, RPS.scissors))
+        cond = {
+                (RPS.rock,     RPS.paper)    : False,
+                (RPS.rock,     RPS.scissors) : True,
+                (RPS.paper,    RPS.rock)     : True,
+                (RPS.paper,    RPS.scissors) : False,
+                (RPS.scissors, RPS.rock)     : False,
+                (RPS.scissors, RPS.paper)    : True
+               }
 
         if red_choice == player_choice:
             outcome = None # Tie
         else:
-            outcome = self.cond[(player_choice, red_choice)]
+            outcome = cond[(player_choice, red_choice)]
 
         if outcome is True:
-            await self.bot.say("I chose {}. You win, {}!"
+            await self.bot.say("{} You win {}!"
                                "".format(red_choice.value, author.mention))
         elif outcome is False:
-            await self.bot.say("I chose {}. You lose, {}!"
+            await self.bot.say("{} You lose {}!"
                                "".format(red_choice.value, author.mention))
         else:
-            await self.bot.say("I chose {}. We're square, {}!"
+            await self.bot.say("{} We're square {}!"
                                "".format(red_choice.value, author.mention))
 
-    @commands.command(name="8", aliases=["8ball"], pass_context=True)
-    async def _8ball(self, ctx, *, question : str):
+    @commands.command(name="8", aliases=["8ball"])
+    async def _8ball(self, *, question : str):
         """Ask 8 ball a question
 
         Question must end with a question mark.
         """
-        author = ctx.message.author
         if question.endswith("?") and question != "?":
-            await self.bot.say('{} `{}`'.format(author.mention, choice(self.ball)))
+            await self.bot.say("`" + choice(self.ball) + "`")
         else:
-            await self.bot.say('{} That doesn\'t look like a question.'.format(author.mention))
+            await self.bot.say("That doesn't look like a question.")
 
     @commands.command(aliases=["sw"], pass_context=True)
     async def stopwatch(self, ctx):
@@ -215,11 +144,11 @@ class General:
         author = ctx.message.author
         if not author.id in self.stopwatches:
             self.stopwatches[author.id] = int(time.perf_counter())
-            await self.bot.say('{} Stopwatch started!'.format(author.mention))
+            await self.bot.say(author.mention + " Stopwatch started!")
         else:
             tmp = abs(self.stopwatches[author.id] - int(time.perf_counter()))
             tmp = str(datetime.timedelta(seconds=tmp))
-            await self.bot.say('{} Stopwatch stopped! Time: **{}**'.format(author.mention, tmp))
+            await self.bot.say(author.mention + " Stopwatch stopped! Time: **" + tmp + "**")
             self.stopwatches.pop(author.id, None)
 
     @commands.command()
@@ -258,21 +187,15 @@ class General:
         roles = [x.name for x in user.roles if x.name != "@everyone"]
 
         joined_at = self.fetch_joined_at(user, server)
-        since_created = (ctx.message.timestamp - user.created_at).total_seconds()
-        since_joined = (ctx.message.timestamp - joined_at).total_seconds()
+        since_created = (ctx.message.timestamp - user.created_at).days
+        since_joined = (ctx.message.timestamp - joined_at).days
         user_joined = joined_at.strftime("%d %b %Y %H:%M")
         user_created = user.created_at.strftime("%d %b %Y %H:%M")
-        sorted_members = sorted(server.members, key=lambda m: m.joined_at)
-        member_number = sorted_members.index(user) + 1
-        before_text = ''
-        if member_number > 1:
-            before_text = str(sorted_members[member_number - 2]) + ' > '
-        after_text = ''
-        if member_number < len(sorted_members):
-            after_text = ' > ' + str(sorted_members[member_number])
+        member_number = sorted(server.members,
+                               key=lambda m: m.joined_at).index(user) + 1
 
-        created_on = "{}\n({} ago)".format(user_created, display_interval(since_created, 2))
-        joined_on = "{}\n({} ago)".format(user_joined, display_interval(since_joined, 2))
+        created_on = "{}\n({} days ago)".format(user_created, since_created)
+        joined_on = "{}\n({} days ago)".format(user_joined, since_joined)
 
         game = "Chilling in {} status".format(user.status)
 
@@ -294,8 +217,8 @@ class General:
         data.add_field(name="Joined Discord on", value=created_on)
         data.add_field(name="Joined this server on", value=joined_on)
         data.add_field(name="Roles", value=roles, inline=False)
-        data.add_field(name="Member position", value='{}: {}**{}**{}'.format(member_number, before_text, user, after_text))
-        data.set_footer(text="Requested by {} | User ID: {}".format(author, user.id))
+        data.set_footer(text="Member #{} | User ID:{}"
+                             "".format(member_number, user.id))
 
         name = str(user)
         name = " ~ ".join((name, user.nick)) if user.nick else name
@@ -317,40 +240,30 @@ class General:
         """Shows server's informations"""
         server = ctx.message.server
         online = len([m.status for m in server.members
-                      if m.status != discord.Status.offline])
+                      if m.status == discord.Status.online or
+                      m.status == discord.Status.idle])
         total_users = len(server.members)
         text_channels = len([x for x in server.channels
                              if x.type == discord.ChannelType.text])
         voice_channels = len(server.channels) - text_channels
-        passed = (ctx.message.timestamp - server.created_at).total_seconds()
-        created_at = ("Since {}. That's {} ago!"
+        passed = (ctx.message.timestamp - server.created_at).days
+        created_at = ("Since {}. That's over {} days ago!"
                       "".format(server.created_at.strftime("%d %b %Y %H:%M"),
-                                display_interval(passed, 2)))
+                                passed))
 
-        verif_level_text = 'Unknown'
-        if   server.verification_level == discord.VerificationLevel.none:
-            verif_level_text = 'None'
-        elif server.verification_level == discord.VerificationLevel.low:
-            verif_level_text = 'Low'
-        elif server.verification_level == discord.VerificationLevel.medium:
-            verif_level_text = 'Medium'
-        elif server.verification_level == discord.VerificationLevel.high:
-            verif_level_text = '(╯°□°）╯︵ ┻━┻'
-
-        emoji_text = ''.join([str(x) for x in server.emojis])
+        colour = ''.join([choice('0123456789ABCDEF') for x in range(6)])
+        colour = int(colour, 16)
 
         data = discord.Embed(
             description=created_at,
-            colour=discord.Colour(value=0x2c2f33))
+            colour=discord.Colour(value=colour))
         data.add_field(name="Region", value=str(server.region))
         data.add_field(name="Users", value="{}/{}".format(online, total_users))
         data.add_field(name="Text Channels", value=text_channels)
         data.add_field(name="Voice Channels", value=voice_channels)
         data.add_field(name="Roles", value=len(server.roles))
         data.add_field(name="Owner", value=str(server.owner))
-        data.add_field(name="Emoji", value="{}/{}".format(len(server.emojis), 50))
-        data.add_field(name="Verification Level", value=verif_level_text)
-        data.set_footer(text="Requested by {} | Server ID: {}".format(ctx.message.author, server.id))
+        data.set_footer(text="Server ID: " + server.id)
 
         if server.icon_url:
             data.set_author(name=server.name, url=server.icon_url)
@@ -360,66 +273,7 @@ class General:
 
         try:
             await self.bot.say(embed=data)
-        except discord.HTTPException as ex:
-            await self.bot.say("I need the `Embed links` permission "
-                               "to send this")
-
-    @commands.command(pass_context=True, no_pm=True, aliases=['emoji', 'emojis'])
-    async def emojiinfo(self, ctx):
-        """Shows server's emojis informations"""
-        server = ctx.message.server
-
-        emoji_cats = [
-                {'name': 'Falcom', 'entries': ['Mishy']},
-                {'name': 'Gurumin', 'entries': ['ParinDisgust']},
-                {'name': 'Xanadu Next', 'entries': ['BraveKnight', 'InventoryChar']},
-                {'name': 'Brandish', 'entries': []},
-                {'name': 'Zwei!!', 'entries': ['PipiroConfident']},
-                {'name': 'Ys', 'entries': ['AdolDistressed', 'AdolAmerica', 'AdolCelceta', 'AdolSparkles', 'ParoParrot', 'CalilicaTaunt', 'FriedaWink', 'KarnaSigh', 'LeezaDistant', 'OzmaAnger', 'DurenLaugh', 'AishaSlap', 'DogiWallCrushing', 'GeisStunned', 'LiliaOffering', 'TiaSurprise', 'Pikkard']},
-                {'name': 'Trails in the Sky', 'entries': ['DukeDizzy', 'ScheraSing', 'CampanellaBow', 'KevinWink', 'EinLaugh', 'ErikaStars', 'EstelleGlare', 'EstelleSmug', 'OlivierLoveSeeker', 'TitaSigh', 'PhantomThiefBeauty', 'GilbertBlorf', 'DaddyDisappointed', 'CapuaDelivery', 'SiegGyrfalcon', 'PrincessJoshua', 'RenneSmug', 'OsBro', 'AnelaceSweets', 'Estdull']},
-                {'name': 'Trails to Zero/Azure', 'entries': []},
-                {'name': 'Trails of Cold Steel', 'entries': ['ReanHalt', 'FieGlare', 'JusisShrug', 'MachiasRage', 'MilliumLetsGo', 'TowaSmile', 'OsBro', 'AbsolutelyDuNot', 'LauraConfused']},
-                {'name': 'Akatsuki no Kiseki', 'entries': ['NachtEdge', 'ChloeExcited', 'LifSmug']},
-                ]
-
-        emoji_text = ''.join([str(x) for x in server.emojis])
-
-        data = discord.Embed(
-            description='Emoji List',
-            colour=discord.Colour(value=0x2c2f33))
-
-        uncat_cat = {'name': 'Uncategorized', 'entries': []}
-        for emoji in server.emojis:
-            uncat = True
-            for emoji_cat in emoji_cats:
-                if emoji.name in emoji_cat['entries']:
-                    uncat = False
-                    break
-            if uncat:
-                uncat_cat['entries'].append(emoji.name)
-
-        if len(uncat_cat['entries']):
-            emoji_cats.append(uncat_cat)
-
-        for emoji_cat in emoji_cats:
-            emoji_cat['objs'] = []
-            for emoji in server.emojis:
-                if emoji.name in emoji_cat['entries']:
-                    emoji_cat['objs'].append(emoji)
-            if len(emoji_cat['objs']):
-                data.add_field(name=emoji_cat['name'], value=''.join([str(x) for x in emoji_cat['objs']]))
-
-        data.set_footer(text="Requested by {}".format(ctx.message.author))
-
-        if server.icon_url:
-            data.set_author(name=server.name, url=server.icon_url)
-            data.set_thumbnail(url=server.icon_url)
-        else:
-            data.set_author(name=server.name)
-
-        try:
-            await self.bot.say(embed=data)
-        except discord.HTTPException as ex:
+        except discord.HTTPException:
             await self.bot.say("I need the `Embed links` permission "
                                "to send this")
 
