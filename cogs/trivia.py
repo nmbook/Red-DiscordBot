@@ -305,10 +305,11 @@ class TriviaSession():
                     has_guessed = True
 
         if has_guessed:
+            answer = self.current_line.answers[0]
             self.current_line = None
             self.status = "correct answer"
             self.scores[message.author] += 1
-            msg = "You got it {}! **+1** to you!".format(message.author.name)
+            msg = "You got it, {} ({})! **+1** to you!".format(message.author.mention, answer)
             await self.bot.send_message(message.channel, msg)
 
 

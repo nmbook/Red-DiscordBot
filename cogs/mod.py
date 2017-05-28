@@ -1691,7 +1691,7 @@ class Mod:
         if mod_channel is None:
             return
 
-        await self.bot.send_message(mod_channel, '{} has joined {}.'.format(str(member), str(server)))
+        await self.bot.send_message(mod_channel, '{} ({}) has joined {}.'.format(member.mention, str(member), str(server)))
 
     async def on_member_remove(self, member):
         server = member.server
@@ -1699,7 +1699,7 @@ class Mod:
         if mod_channel is None:
             return
 
-        await self.bot.send_message(mod_channel, '{} has left {}.'.format(str(member), str(server)))
+        await self.bot.send_message(mod_channel, '{} ({}) has left {}.'.format(member.mention, str(member), str(server)))
 
     async def check_names(self, before, after):
         if before.name != after.name:
