@@ -59,23 +59,24 @@ NUM_ENC = "\N{COMBINING ENCLOSING KEYCAP}"
 
 
 class SMReel(Enum):
-    cherries  = "\N{CHERRIES}"
-    cookie    = "\N{COOKIE}"
+    cherries  = "<:SC1:319184251478343690>"
     two       = "\N{DIGIT TWO}" + NUM_ENC
-    flc       = "\N{FOUR LEAF CLOVER}"
-    cyclone   = "\N{CYCLONE}"
-    sunflower = "\N{SUNFLOWER}"
+    orbment   = "<:Orbment:319199927265918978>"
+    bell      = "<:SC3:319184260328325130>"
+    plum      = "<:SC2:319184252442902530>"
+    jack      = "<:Jack:319199914959568896>"
+    bar       = "<:SC5:319184267114708992>"
     six       = "\N{DIGIT SIX}" + NUM_ENC
-    mushroom  = "\N{MUSHROOM}"
-    heart     = "\N{HEAVY BLACK HEART}"
-    snowflake = "\N{SNOWFLAKE}"
+    halle     = "<:Halle:319199911285620748>"
+    seven     = "<:SC6:319184268138119169>"
+    waterm    = "<:SC4:319184266741284864>"
 
 PAYOUTS = {
     (SMReel.two, SMReel.two, SMReel.six) : {
         "payout" : lambda x: x * 2500 + x,
         "phrase" : "JACKPOT! 226! Your bid has been multiplied ×2,500!"
     },
-    (SMReel.flc, SMReel.flc, SMReel.flc) : {
+    (SMReel.seven, SMReel.seven, SMReel.seven) : {
         "payout" : lambda x: x + 1000,
         "phrase" : "Three sevens! +1,000!"
     },
@@ -102,13 +103,13 @@ PAYOUTS = {
 }
 
 SLOT_PAYOUTS_MSG = ("Slot machine payouts:\n"
-                    "{two.value} {two.value} {six.value} Bet * 2500\n"
-                    "{flc.value} {flc.value} {flc.value} +1000\n"
+                    "{two.value} {two.value} {six.value} Bet ×2,500\n"
+                    "{seven.value} {seven.value} {seven.value} +1,000\n"
                     "{cherries.value} {cherries.value} {cherries.value} +800\n"
-                    "{two.value} {six.value} Bet * 4\n"
-                    "{cherries.value} {cherries.value} Bet * 3\n\n"
+                    "{two.value} {six.value} Bet ×4\n"
+                    "{cherries.value} {cherries.value} Bet ×3\n\n"
                     "Three symbols: +500\n"
-                    "Two symbols: Bet * 2".format(**SMReel.__dict__))
+                    "Two symbols: Bet ×2".format(**SMReel.__dict__))
 
 
 class Bank:
