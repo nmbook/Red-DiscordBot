@@ -990,7 +990,6 @@ class Owner:
             print("The set owner request has been ignored.")
             self.setowner_lock = False
 
-<<<<<<< HEAD
     def _get_version(self):
         if not os.path.isdir(".git"):
             msg = "This instance of Red hasn't been installed with git."

@@ -73,11 +73,11 @@ class SMReel(Enum):
 PAYOUTS = {
     (SMReel.two, SMReel.two, SMReel.six) : {
         "payout" : lambda x: x * 2500 + x,
-        "phrase" : "JACKPOT! 226! Your bid has been multiplied * 2500!"
+        "phrase" : "JACKPOT! 226! Your bid has been multiplied ×2,500!"
     },
     (SMReel.flc, SMReel.flc, SMReel.flc) : {
         "payout" : lambda x: x + 1000,
-        "phrase" : "4LC! +1000!"
+        "phrase" : "Three sevens! +1,000!"
     },
     (SMReel.cherries, SMReel.cherries, SMReel.cherries) : {
         "payout" : lambda x: x + 800,
@@ -85,11 +85,11 @@ PAYOUTS = {
     },
     (SMReel.two, SMReel.six) : {
         "payout" : lambda x: x * 4 + x,
-        "phrase" : "2 6! Your bid has been multiplied * 4!"
+        "phrase" : "26! Your bid has been multiplied ×4!"
     },
     (SMReel.cherries, SMReel.cherries) : {
         "payout" : lambda x: x * 3 + x,
-        "phrase" : "Two cherries! Your bid has been multiplied * 3!"
+        "phrase" : "Two cherries! Your bid has been multiplied ×3!"
     },
     "3 symbols" : {
         "payout" : lambda x: x + 500,
@@ -97,7 +97,7 @@ PAYOUTS = {
     },
     "2 symbols" : {
         "payout" : lambda x: x * 2 + x,
-        "phrase" : "Two consecutive symbols! Your bid has been multiplied * 2!"
+        "phrase" : "Two consecutive symbols! Your bid has been multiplied ×2!"
     },
 }
 
@@ -420,18 +420,15 @@ class Economy:
         id = author.id
         if self.bank.account_exists(author):
             if id in self.payday_register[server.id]:
-                seconds = abs(self.payday_register[server.id][
-                              id] - int(time.perf_counter()))
+                seconds = abs(self.payday_register[server.id][id] -
+                        int(time.perf_counter()))
                 if seconds >= self.settings[server.id]["PAYDAY_TIME"]:
-                    self.bank.deposit_credits(author, self.settings[
-                                              server.id]["PAYDAY_CREDITS"])
-                    self.payday_register[server.id][
-                        id] = int(time.perf_counter())
+                    self.bank.deposit_credits(author,
+                            self.settings[server.id]["PAYDAY_CREDITS"])
+                    self.payday_register[server.id][id] = int(time.perf_counter())
                     await self.bot.say(
                         "{} Here, take some credits. Enjoy! (+{:,}"
-                        " credits!)".format(
-                            author.mention,
-                            str(self.settings[server.id]["PAYDAY_CREDITS"])))
+                        " credits!)".format(author.mention, self.settings[server.id]["PAYDAY_CREDITS"]))
                 else:
                     dtime = display_interval(self.settings[server.id]["PAYDAY_TIME"] - seconds)
                     await self.bot.say(
@@ -439,12 +436,11 @@ class Economy:
                         " wait {}.".format(author.mention, dtime))
             else:
                 self.payday_register[server.id][id] = int(time.perf_counter())
-                self.bank.deposit_credits(author, self.settings[
+                self.bank.deposit_credits(author, self.settings[ \
                                           server.id]["PAYDAY_CREDITS"])
                 await self.bot.say(
-                    "{} Here, take some credits. Enjoy! (+{:,} credits!)".format(
-                        author.mention,
-                        str(self.settings[server.id]["PAYDAY_CREDITS"])))
+                    "{} Here, take some credits. Enjoy! (+{:,} credits!)".format(author.mention,
+                        self.settings[server.id]["PAYDAY_CREDITS"]))
         else:
             await self.bot.say("{} You need an account to receive credits."
                                " Type `{}bank register` to open one.".format(
@@ -567,7 +563,7 @@ class Economy:
                 return True
         return False
 
-    @commands.command()
+    @commands.command(aliases="payout")
     async def payouts(self):
         """Shows slot machine payouts"""
         await self.bot.whisper(SLOT_PAYOUTS_MSG)
@@ -599,42 +595,17 @@ class Economy:
             await self.bot.say("{} You need an account with enough funds to "
                                "play the slot machine.".format(author.mention))
         except OnCooldown:
-            await self.bot.say("Slot machine is still cooling off! Wait {} "
-                               "seconds between each pull".format(slot_time))
+            dtime = display_interval(slot_time)
+            await self.bot.say("{} Slot machine is still cooling off! Wait {} "
+                               "between each pull".format(author.mention, dtime))
         except InvalidBid:
-            await self.bot.say("Bid must be between {} and {}."
-                               "".format(settings["SLOT_MIN"],
+            await self.bot.say("{} Bid must be between {:,} and {:,}."
+                               "".format(author.mention,
+                                         settings["SLOT_MIN"],
                                          settings["SLOT_MAX"]))
 
     async def slot_machine(self, author, bid):
         default_reel = deque(SMReel)
-        if not self.bank.account_exists(author):
-            await self.bot.say("{} You need an account to use the slot machine. Type `{}bank register` to open one.".format(author.mention, ctx.prefix))
-            return
-        if self.bank.can_spend(author, bid):
-            if bid >= self.settings[server.id]["SLOT_MIN"] and bid <= self.settings[server.id]["SLOT_MAX"]:
-                if author.id in self.slot_register:
-                    if abs(self.slot_register[author.id] - int(time.perf_counter())) >= self.settings[server.id]["SLOT_TIME"]:
-                        self.slot_register[author.id] = int(
-                            time.perf_counter())
-                        await self.slot_machine(ctx.message, bid)
-                    else:
-                        await self.bot.say("Slot machine is still cooling off! Wait {} between each pull".format(display_interval(self.settings[server.id]["SLOT_TIME"])))
-                else:
-                    self.slot_register[author.id] = int(time.perf_counter())
-                    await self.slot_machine(ctx.message, bid)
-            else:
-                await self.bot.say("{} Bid must be between {:,} and {:,}.".format(author.mention, self.settings[server.id]["SLOT_MIN"], self.settings[server.id]["SLOT_MAX"]))
-        else:
-            await self.bot.say("{} You need an account with enough funds to play the slot machine.".format(author.mention))
-
-    async def slot_machine(self, message, bid):
-        reel_pattern = [":cherries:", ":cookie:", ":two:", ":four_leaf_clover:",
-                        ":cyclone:", ":sunflower:", ":six:", ":mushroom:", ":heart:", ":snowflake:"]
-        # padding prevents index errors
-        padding_before = [":mushroom:", ":heart:", ":snowflake:"]
-        padding_after = [":cherries:", ":cookie:", ":two:"]
-        reel = padding_before + reel_pattern + padding_after
         reels = []
         self.slot_register[author.id] = datetime.utcnow()
         for i in range(3):
@@ -680,7 +651,7 @@ class Economy:
             then = self.bank.get_balance(author)
             self.bank.withdraw_credits(author, bid)
             now = then - bid
-            await self.bot.say("{}\n{} Nothing!\nYour bid: {}\n{} → {}!"
+            await self.bot.say("{}\n{} Nothing!\nYour bid: {:,}\n{:,} → {:,}!"
                                "".format(slot, author.mention, bid, then, now))
 
     @commands.group(pass_context=True, no_pm=True)
