@@ -6,12 +6,8 @@ import os
 from random import shuffle, choice
 from cogs.utils.dataIO import dataIO
 from cogs.utils import checks
-<<<<<<< HEAD
-from cogs.utils.chat_formatting import pagify
 from urllib.parse import urlparse
-=======
 from cogs.utils.chat_formatting import pagify, display_interval
->>>>>>> Move display_interval to utils and update it to support a "short" appearance - for Audio, Economy, .serverinfo/.userinfo
 from __main__ import send_cmd_help, settings
 from json import JSONDecodeError
 import re
