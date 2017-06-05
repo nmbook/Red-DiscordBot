@@ -833,7 +833,7 @@ class Owner:
         else:
             await self.bot.say("Your message has been sent.")
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, aliases=["about", "red", "falcombot", "bot"])
     async def info(self, ctx):
         """Shows info about Red"""
         author_repo = "https://github.com/Twentysix26"
@@ -888,7 +888,7 @@ class Owner:
         await self.bot.say("Been up for: **{}** (since {} UTC)"
                            "".format(passed, since))
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, aliases=["ver", "v"])
     async def version(self, ctx):
         """Shows Red's current version"""
         response = self.bot.loop.run_in_executor(None, self._get_version, ctx)
