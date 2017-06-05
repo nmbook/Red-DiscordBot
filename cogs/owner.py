@@ -990,7 +990,7 @@ class Owner:
             print("The set owner request has been ignored.")
             self.setowner_lock = False
 
-    def _get_version(self):
+    def _get_version(self, ctx):
         if not os.path.isdir(".git"):
             msg = "This instance of Red hasn't been installed with git."
             e = discord.Embed(title=msg,
@@ -1011,7 +1011,6 @@ class Owner:
             domain, _, resource = url[4:].partition(':')
             url = 'https://{}/{}'.format(domain, resource)
 
-        url = url.read().strip()[:-4]
         repo_name = url.split("/")[-1]
 
         embed = discord.Embed(title="Updates of " + repo_name,
@@ -1026,7 +1025,7 @@ class Owner:
             commit_url = url + "/commit/" + chash
             content = "[{}]({}) - {} ".format(chash[:6], commit_url, commit)
             embed.add_field(name=when, value=content, inline=False)
-        embed.add_field(name='Total commits: {}'.format(ncommits))
+        embed.add_field(name='Total commits', value=str(ncommits))
         embed.set_footer(text="Requested by {}".format(ctx.message.author))
 
         return embed
