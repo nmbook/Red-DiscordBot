@@ -14,9 +14,10 @@ class RPS(Enum):
 
 class RPSChoice:
     def __init__(self, argument):
+        argument = argument.strip().upper()
         for name, member in RPS.__members__.items():
-            if argument.upper() == name or argument == member.value:
-                self.choice = member.value
+            if argument == name.upper()[:len(argument)] or argument == member.value:
+                self.choice = member
                 return
         raise
 
@@ -74,10 +75,10 @@ class RandomTools:
 
     @commands.command(pass_context=True)
     async def rps(self, ctx, your_choice : RPSChoice):
-        """Play rock paper scissors."""
+        """Play rock paper scissors. Choices are "rock", "paper", or "scissors"!"""
         author = ctx.message.author
         player_choice = your_choice.choice
-        red_choice = choice((RPS.rock, RPS.paper, RPS.scissors))
+        red_choice = choice((RPS.ROCK, RPS.PAPER, RPS.SCISSORS))
 
         if red_choice == player_choice:
             outcome = None # Tie
@@ -85,11 +86,11 @@ class RandomTools:
             outcome = self.rps_conditions[(player_choice, red_choice)]
 
         if outcome is True:
-            await self.bot.say("{1} I chose {0}. You win!".format(red_choice.value, author.mention))
+            await self.bot.say("{} I chose {} (vs {}). You win!".format(author.mention, red_choice.value, player_choice.value))
         elif outcome is False:
-            await self.bot.say("{1} I chose {0}. You lose!".format(red_choice.value, author.mention))
+            await self.bot.say("{} I chose {} (vs {}). You lose!".format(author.mention, red_choice.value, player_choice.value))
         else:
-            await self.bot.say("{1} I chose {0}. We're square!".format(red_choice.value, author.mention))
+            await self.bot.say("{} I chose {} (vs {}). We're square!".format(author.mention, red_choice.value, player_choice.value))
 
     @commands.command(pass_context=True, name="8", aliases=["8ball"])
     async def _8ball(self, ctx, *, question : str):
