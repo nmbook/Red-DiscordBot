@@ -60,21 +60,19 @@ NUM_ENC = "\N{COMBINING ENCLOSING KEYCAP}"
 
 class SMReel(Enum):
     cherries  = "<:SC1:319184251478343690>"
-    two       = "\N{DIGIT TWO}" + NUM_ENC
     orbment   = "<:Orbment:319199927265918978>"
     bell      = "<:SC3:319184260328325130>"
     plum      = "<:SC2:319184252442902530>"
     jack      = "<:Jack:319199914959568896>"
     bar       = "<:SC5:319184267114708992>"
-    six       = "\N{DIGIT SIX}" + NUM_ENC
     halle     = "<:Halle:319199911285620748>"
     seven     = "<:SC6:319184268138119169>"
     waterm    = "<:SC4:319184266741284864>"
 
 PAYOUTS = {
-    (SMReel.two, SMReel.two, SMReel.six) : {
+    (SMReel.halle, SMReel.jack, SMReel.halle) : {
         "payout" : lambda x: x * 2500 + x,
-        "phrase" : "JACKPOT! 226! Your bid has been multiplied ×2,500!"
+        "phrase" : "JACKPOT! Gambler Jack! Your bid has been multiplied ×2,500!"
     },
     (SMReel.seven, SMReel.seven, SMReel.seven) : {
         "payout" : lambda x: x + 1000,
@@ -84,9 +82,13 @@ PAYOUTS = {
         "payout" : lambda x: x + 800,
         "phrase" : "Three cherries! +800!"
     },
-    (SMReel.two, SMReel.six) : {
+    (SMReel.halle, SMReel.jack) : {
         "payout" : lambda x: x * 4 + x,
-        "phrase" : "26! Your bid has been multiplied ×4!"
+        "phrase" : "Halle and Jack! Your bid has been multiplied ×4!"
+    },
+    (SMReel.jack, SMReel.halle) : {
+        "payout" : lambda x: x * 4 + x,
+        "phrase" : "Halle and Jack! Your bid has been multiplied ×4!"
     },
     (SMReel.cherries, SMReel.cherries) : {
         "payout" : lambda x: x * 3 + x,
@@ -103,10 +105,10 @@ PAYOUTS = {
 }
 
 SLOT_PAYOUTS_MSG = ("Slot machine payouts:\n"
-                    "{two.value} {two.value} {six.value} Bet ×2,500\n"
+                    "{halle.value} {jack.value} {halle.value} Bet ×2,500\n"
                     "{seven.value} {seven.value} {seven.value} +1,000\n"
                     "{cherries.value} {cherries.value} {cherries.value} +800\n"
-                    "{two.value} {six.value} Bet ×4\n"
+                    "{halle.value} {jack.value} / {jack.value} {halle.value} Bet ×4\n"
                     "{cherries.value} {cherries.value} Bet ×3\n\n"
                     "Three symbols: +500\n"
                     "Two symbols: Bet ×2".format(**SMReel.__dict__))
