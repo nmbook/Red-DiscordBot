@@ -1,11 +1,15 @@
 import discord
 from discord.ext import commands
+from cogs.utils.dataIO import dataIO
+from cogs.utils import checks
+from __main__ import send_cmd_help
 import aiohttp
 import asyncio
 import urllib.parse
 import re
 import string
 import traceback
+import os
 
 find_whitespace = re.compile("\\s")
 match_file_options = re.compile('|'.join(['border', 'frameless', 'frame', 'thumb', 'thumbnail',
@@ -19,9 +23,10 @@ class Wikia:
 
     def __init__(self, bot):
         self.bot = bot
-        self.settings = {
-                'DEFAULT_WIKIA': 'kiseki'
-                }
+        self.settings = dataIO.load_json("data/wikia/settings.json")
+
+    def save_settings(self):
+        dataIO.save_json('data/wikia/settings.json', self.settings)
 
     async def wikiset(self, setting, *, value):
         """Set Wikia viewing module settings."""
@@ -32,7 +37,10 @@ class Wikia:
         """Wikia lookuo."""
 
         try:
-            wikia, page_name, section_name  = self.parse_search_terms(search_terms)
+            wikia, page_name, section_name  = await self.parse_search_terms(ctx, search_terms)
+            if wikia is None:
+                return
+
             fields = {}
             fields['search_state'] = 'title'
             result, fields                  = await self.wikia_api_get_page_content(wikia, page_name, section_name, search_fields=fields)
@@ -86,7 +94,7 @@ class Wikia:
             await self.bot.say('*Error: An error occurred processing the Wikia API:* `{}`'.format(str(ex)))
 
 
-    def parse_search_terms(self, search_terms):
+    async def parse_search_terms(self, ctx, search_terms):
         """Parses the search terms into "wikia", "page_name", and "section_name" parts."""
         search_terms = search_terms.strip(' <>:\t\n')
         if search_terms.lower().startswith('http://') or search_terms.lower().startswith('https://') or search_terms.startswith('//'):
@@ -109,7 +117,16 @@ class Wikia:
                 search_start = search_terms.find('/') + 1
                 search_terms = search_terms[search_start:].strip(' <>:\t\n')
         else:
-            wikia = self.settings['DEFAULT_WIKIA']
+            if ctx.message.server is None:
+                await self.bot.say('*Error: You cannot set a default Wikia in private messages with me. You must use the command with a `-w`/`-wiki` parameter that specifies the Wikia to use.*')
+                return None, None, None
+
+            server_id = ctx.message.server.id
+            if server_id in self.settings:
+                wikia = self.settings[server_id]['DEFAULT_WIKIA']
+            else:
+                await self.bot.say('*Error: No default Wikia has been set for this server. You must use the command with a `-w`/`-wiki` parameter that specifies the Wikia to use.*')
+                return None, None, None
 
         if '#' in search_terms:
             parts = search_terms.split('#', 1)
@@ -893,7 +910,48 @@ class Wikia:
 
         return fields
 
+    @commands.group(pass_context=True)
+    @checks.is_owner()
+    async def wikiaset(self, ctx):
+        """Wikia module settings."""
+        if ctx.invoked_subcommand is None:
+            await send_cmd_help(ctx)
+            return
+
+    @wikiaset.command(name="default", aliases=["defaultwiki", "defaultwikia"], pass_context=True)
+    @checks.is_owner()
+    async def wikiaset_default(self, ctx, subdomain):
+        """Set the default Wikia for this server."""
+        if ctx.message.server is None:
+            await self.bot.say('*Error: You cannot set a default Wikia in private messages with me. Use the `wikiaset default` command in a server.*')
+            return
+
+        server_id = ctx.message.server.id
+        if subdomain.replace('_', '').isalnum() and len(subdomain) > 2:
+            if server_id in self.settings:
+                self.settings[server_id]['DEFAULT_WIKIA'] = subdomain
+            else:
+                self.settings[server_id] = {'DEFAULT_WIKIA': subdomain}
+            await self.bot.say("The default Wikia for this server is now: <http://{}.wikia.com>".format(subdomain))
+            self.save_settings()
+        else:
+            await self.bot.say("That Wikia subdomain is not valid.")
+
+def check_files():
+    default       = {}
+    data_path     = "data/wikia/"
+    settings_path = "data/wikia/settings.json"
+
+    if not os.path.exists(data_path):
+        print("Creating Wikia module data folder...")
+        os.makedirs(data_path)
+
+    if not os.path.isfile(settings_path):
+        print("Creating default Wikia module settings.json...")
+        dataIO.save_json(settings_path, {})
 
 def setup(bot):
+    check_files()
+
     n = Wikia(bot)
     bot.add_cog(n)
