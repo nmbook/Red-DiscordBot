@@ -1169,11 +1169,12 @@ class Mod:
         current_ch = ctx.message.channel
         cog = None
         for key, command in self.bot.commands.items():
-            if key.lower() == word.lower() or \
-                    command.name.lower() == word.lower() or \
-                    word.lower() in ' '.join(command.aliases).lower() or \
-                    word.lower() == command.cog_name.lower():
-                cog = command.cog_name
+            if not command.cog_name is None:
+                if key.lower() == word.lower() or \
+                        command.name.lower() == word.lower() or \
+                        word.lower() in ' '.join(command.aliases).lower() or \
+                        word.lower() == command.cog_name.lower():
+                    cog = command.cog_name
         if cog is None:
             await self.bot.say("Command or cog not found: `{}`".format(word))
             return
