@@ -34,7 +34,11 @@ class Wikia:
 
     @commands.command(pass_context=True, aliases=["wiki"])
     async def wikia(self, ctx, *, search_terms : str):
-        """Wikia lookuo."""
+        """Wikia lookup. Finds a Wikia page by name and displays it with formatting and images.
+        
+        Specify the Wikia to use (if it's different from the default one set for this server) by typing "-w" followed by the Wikia subdomain anywhere in the command.
+        
+        Alternatively, you may use a complete URL to an article to view the text and formatting on that page. Enclose it with <>s to avoid your own message generating a preview."""
 
         try:
             wikia, page_name, section_name  = await self.parse_search_terms(ctx, search_terms)
