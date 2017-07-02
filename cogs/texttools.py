@@ -243,6 +243,25 @@ class TextTools:
         result = text[::-1]
         await self.bot.say('{}: {}'.format(author.mention, escape_mass_mentions(result)))
 
+    @commands.command(pass_context=True)
+    async def hex2str(self, ctx, *, text):
+        """Converts the given hex bytes to a string assuming UTF-8."""
+
+        author = ctx.message.author
+        result = codecs.decode(text.replace(' ', ''), 'hex')
+        resultx = result.decode('utf-8')
+        await self.bot.say('{}: {}'.format(author.mention, escape_mass_mentions(resultx)))
+
+    @commands.command(pass_context=True)
+    async def hex2strx(self, ctx, encoding, *, text):
+        """Converts the given hex bytes to a string given an encoding."""
+
+        author = ctx.message.author
+        result = codecs.decode(text.replace(' ', ''), 'hex')
+        resultx = result.decode(encoding)
+        await self.bot.say('{}: {}'.format(author.mention, escape_mass_mentions(resultx)))
+
+
 def setup(bot):
     bot.add_cog(TextTools(bot))
 
