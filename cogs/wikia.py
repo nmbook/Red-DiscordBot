@@ -721,7 +721,7 @@ class Wikia:
                             page_content = page_content[:link_start_pos] + page_content[link_end_pos + link_extend_length:]
                             pos = link_start_pos - 1
                         else:
-                            if namespace == ':Category':
+                            if namespace == ':Category' or namespace == ':File' or namespace == ':Image':
                                 # remove the ":" from the start
                                 destination = destination[1:]
                                 text = text[1:]
